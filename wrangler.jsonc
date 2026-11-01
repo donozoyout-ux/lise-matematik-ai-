@@ -1,0 +1,13 @@
+{
+  "name": "lise-matematik-ai",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-31",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*",
+      "/health"
+    ]
+  }
+}
