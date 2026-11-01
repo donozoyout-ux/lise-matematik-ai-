@@ -5,23 +5,23 @@ function flowText(ctx,txt,x,y,width,lineHeight,maxLines){let line='',n=0;for(con
 function drawDiagram(ctx,d,x,y,w,h){if(!d||!d.points||!d.segments?.length)return false;const lookup=Object.fromEntries(d.points.map(p=>[p.id,p]));const pos=p=>({x:x+(p.x/100)*w,y:y+(p.y/100)*h});ctx.lineWidth=3.5;ctx.strokeStyle='#245caa';for(const s of d.segments){const a=lookup[s.from],b=lookup[s.to];if(!a||!b)continue;let pa=pos(a),pb=pos(b);ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke()}ctx.font='bold 23px Arial';ctx.fillStyle='#13457e';for(const p of d.points){let k=pos(p);ctx.beginPath();ctx.arc(k.x,k.y,4,0,Math.PI*2);ctx.fill();ctx.fillText(p.id,k.x+9,k.y-8)}ctx.fillStyle='#ad5f17';for(const l of d.labels||[]){let k=pos(l);ctx.fillText(l.text,k.x,k.y)}return true}
 function paint(canvas){
  const W=1120,items=solution.steps.slice(0,step+1);
- const imageArea=solution.diagram?330:400;
+ const imageArea=solution.diagram?420:390;
  const lineEst=items.reduce((n,s)=>n+135+Math.ceil(String(s.explanation||'').length/65)*37,0);
- const H=Math.max(650,235+imageArea+lineEst+(step===solution.steps.length-1?100:0));
+ const H=Math.max(780,450+imageArea+lineEst+(step===solution.steps.length-1?110:0));
  canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');
  c.fillStyle='#fffefa';c.fillRect(0,0,W,H);c.fillStyle='#2563eb';c.fillRect(0,0,W,9);
  c.font='bold 24px Arial';c.fillStyle='#3471b9';c.fillText('MATEMATİK AI  /  ÇÖZÜM',36,48);
  c.font='bold 33px Arial';c.fillStyle='#172d50';
  const questionBottom=flowText(c,solution.question,38,98,1035,43,4);
  const diagramTop=Math.max(215,questionBottom+12);
- let detailsTop=diagramTop+imageArea;
+ let detailsTop=diagramTop+imageArea+24;
  function work(){c.strokeStyle='#c9ddf5';c.beginPath();c.moveTo(32,detailsTop);c.lineTo(1088,detailsTop);c.stroke();let y=detailsTop+47;
  items.forEach((s,i)=>{c.fillStyle=i===step?'#fff0cb':'#ebf4ff';c.fillRect(32,y-33,1052,9);c.fillStyle=i===step?'#a6680f':'#176bc1';c.font='bold 27px Arial';y=flowText(c,(i+1)+'. '+(s.title||'Çözüm'),45,y,1020,36,2)+11;c.fillStyle='#203853';c.font='26px Georgia';y=flowText(c,s.explanation,45,y,1010,37,9)+36});
  if(step===solution.steps.length-1){c.fillStyle='#e0faea';c.fillRect(29,H-95,1060,68);c.fillStyle='#14683e';c.font='bold 32px Arial';flowText(c,'SONUÇ: '+solution.answer,47,H-49,1010,36,1)}}
- if(drawDiagram(c,solution.diagram,155,diagramTop+8,810,imageArea-30)){work();return}
+ if(drawDiagram(c,solution.diagram,95,diagramTop+16,650,imageArea-65)){c.fillStyle='#f1f7ff';c.fillRect(770,diagramTop+15,312,imageArea-50);c.font='bold 22px Arial';c.fillStyle='#225bab';c.fillText('ŞEKİL ÜZERİNDE',787,diagramTop+52);c.fillText('İŞLEMLER',787,diagramTop+82);c.font='22px Georgia';c.fillStyle='#194166';let ay=diagramTop+124;for(const s of items.slice(-3)){ay=flowText(c,s.title,787,ay,275,29,2)+12;ay=flowText(c,s.explanation,787,ay,275,29,3)+18;if(ay>detailsTop-70)break}work();return}
  // Geometri çizimi doğrulanamadığında şekli kaybetme: seçilen özgün bölgeyi beyaz sayfanın içine büyük yerleştir.
  const img=new Image();img.onload=()=>{c.fillStyle='#f7faff';c.fillRect(30,diagramTop,1060,imageArea-12);
- const factor=Math.min(1020/img.width,(imageArea-35)/img.height);const iw=img.width*factor,ih=img.height*factor;
+ const factor=Math.min(1010/img.width,(imageArea-35)/img.height);const iw=img.width*factor,ih=img.height*factor;
  c.drawImage(img,(W-iw)/2,diagramTop+8+(imageArea-35-ih)/2,iw,ih);
  c.strokeStyle='#b9d0e9';c.strokeRect(30,diagramTop,1060,imageArea-12);work()};
  img.onerror=()=>{c.fillStyle='#9b6320';c.font='24px Arial';c.fillText('Soru görseli yüklenemedi.',42,diagramTop+70);work()};
