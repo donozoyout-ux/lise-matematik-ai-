@@ -4,7 +4,7 @@ async function askGemini(messages, env, asJson=false){
  if(!env.GEMINI_API_KEY)throw Error('Sunucuda GEMINI_API_KEY tanımlanmadı.');
  const parts=[];for(const m of messages){if(Array.isArray(m.content)){for(const p of m.content){if(p.type==='text')parts.push({text:p.text});else if(p.type==='image_url'){const match=/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(p.image_url.url);if(!match)throw Error('Görsel biçimi geçersiz.');parts.push({inline_data:{mime_type:match[1],data:match[2]}})}}}else parts.push({text:(m.role==='assistant'?'Öğretmen: ':'Öğrenci: ')+m.content});}
  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),70000);
- try{const url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(env.GEMINI_MODEL||'gemini-3.5-flash-lite')+':generateContent';
+ try{const url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent((!env.GEMINI_MODEL||env.GEMINI_MODEL==='gemini-2.5-flash-lite')?'gemini-3.5-flash-lite':env.GEMINI_MODEL)+':generateContent';
  const r=await fetch(url,{method:'POST',headers:{'x-goog-api-key':env.GEMINI_API_KEY,'content-type':'application/json'},signal:controller.signal,body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{temperature:0.2,...(asJson?{responseMimeType:'application/json'}:{})}})});
  const data=await r.json();if(!r.ok){if(r.status===429)throw Error('Ücretsiz Gemini kotası doldu. Daha sonra tekrar dene.');throw Error('Gemini API hatası: '+(data.error?.message||r.status));}
  return (data.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join('');
