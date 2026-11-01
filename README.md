@@ -15,19 +15,19 @@ Node.js 20+ kurulu olmalı.
 
 ```bash
 npm install
-OPENAI_API_KEY=sk-... npm start
+GEMINI_API_KEY=sk-... npm start
 ```
 
 Windows PowerShell:
 ```powershell
-$env:OPENAI_API_KEY="sk-..."
+$env:GEMINI_API_KEY="sk-..."
 npm start
 ```
 
 http://localhost:3000 adresini aç. **API anahtarını GitHub dosyalarına veya tarayıcı koduna koyma.**
 
 ## Render'da yayınla
-Render > New > Blueprint > bu repoyu seç > render.yaml servis kurulumunu onayla. Render'da `OPENAI_API_KEY` ortam değişkenini **Secret** olarak gir. Varsayılan `OPENAI_MODEL=gpt-4.1-mini` olup değiştirilebilir. Servis dağıtıldıktan sonra /health yanıtını kontrol et.
+Render > New > Blueprint > bu repoyu seç > render.yaml servis kurulumunu onayla. Render'da `GEMINI_API_KEY` ortam değişkenini **Secret** olarak gir. Varsayılan `GEMINI_MODEL=gemini-2.5-flash-lite` olup değiştirilebilir. Servis dağıtıldıktan sonra /health yanıtını kontrol et.
 
 ## Test
 ```bash
@@ -39,3 +39,5 @@ npm test
 - Matematik cevapları hata içerebilir; öğretmen kontrolü tavsiye edilir.
 - İlk sürümde kullanıcı hesabı, kalıcı dosya arşivi, faturalandırma ve üretim düzeyinde rate limit yoktur.
 - Görsel her çözüm ve sohbet isteğinde API'ye gönderilir. Veri gizliliği ve kullanım maliyeti için kurumsal dağıtım öncesi ek önlemler gerekir.
+
+Ücretsiz Gemini API anahtarı: https://aistudio.google.com/apikey — ücretli planı etkinleştirmeden ücretsiz kota içinde çalıştırın. Ücretsiz kota sınırlıdır; görseller Google API sunucularına iletilir.
