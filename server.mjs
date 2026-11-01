@@ -19,5 +19,5 @@ const server=http.createServer(async(req,res)=>{try{
  if(typeof b.question!=='string'||!b.question.trim()||b.question.length>1000||typeof b.context!=='string'||b.context.length>12000)return json(res,400,{error:'Soru veya çözüm bilgisi geçersiz.'});const turns=Array.isArray(b.history)?b.history.slice(-6).filter(x=>['user','assistant'].includes(x.role)&&typeof x.content==='string').map(x=>({role:x.role,content:x.content.slice(0,1500)})):[];const messages=[{role:'system',content:'Sen Türkçe lise matematik öğretmenisin. Verilen çözümü ve görseli esas al. Soruyu anlaşılır, doğruluğa önem vererek cevapla. Belirsizlik varsa belirt.'},{role:'user',content:[{type:'text',text:'Çözüm bağlamı: '+b.context},{type:'image_url',image_url:{url:b.image,detail:'high'}}]},...turns,{role:'user',content:b.question}];const reply=await askOpenAI(messages);return json(res,200,{reply:reply.slice(0,6000)});}
  return json(res,404,{error:'Bulunamadı.'});
  }catch(e){const msg=e.name==='AbortError'?'AI zaman aşımına uğradı.':e.message||'Beklenmeyen hata';json(res,500,{error:msg});}});
-if(process.env.NODE_ENV!=='test')server.listen(port,()=>console.log('Matematik AI port '+port));
+if(!process.env.NODE_TEST_CONTEXT && process.env.NODE_ENV!=='test')server.listen(port,()=>console.log('Matematik AI port '+port));
 export {server,validImage};
