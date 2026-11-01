@@ -27,7 +27,7 @@ npm start
 http://localhost:3000 adresini aç. **API anahtarını GitHub dosyalarına veya tarayıcı koduna koyma.**
 
 ## Render'da yayınla
-Render > New > Blueprint > bu repoyu seç > render.yaml servis kurulumunu onayla. Render'da `GEMINI_API_KEY` ortam değişkenini **Secret** olarak gir. Varsayılan `GEMINI_MODEL=gemini-2.5-flash-lite` olup değiştirilebilir. Servis dağıtıldıktan sonra /health yanıtını kontrol et.
+Render > New > Blueprint > bu repoyu seç > render.yaml servis kurulumunu onayla. Render'da `GEMINI_API_KEY` ortam değişkenini **Secret** olarak gir. Varsayılan `GEMINI_MODEL=gemini-3.5-flash-lite` olup değiştirilebilir. Servis dağıtıldıktan sonra /health yanıtını kontrol et.
 
 ## Test
 ```bash
