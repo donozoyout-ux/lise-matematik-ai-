@@ -20,7 +20,7 @@ function response(status,data){return new Response(JSON.stringify(data),{status,
 function gate(request){const ip=request.headers.get('cf-connecting-ip')||'unknown',now=Date.now();const next=(limits.get(ip)||[]).filter(t=>now-t<60000);if(next.length>=12)return false;next.push(now);limits.set(ip,next);if(limits.size>3000)limits.clear();return true;}
 export default {async fetch(request,env){
  const url=new URL(request.url),route=url.pathname;
- if(request.method==='GET'&&route==='/api/version')return response(200,{version:'2026.11.02-final2',board:'separate-algebra-geometry',verification:'independent-image-and-arithmetic'});
+ if(request.method==='GET'&&route==='/api/version')return response(200,{version:'2026.11.02-proof3',board:'separate-algebra-geometry',verification:'independent-image-and-arithmetic'});
  if(request.method==='GET'){if(route==='/health')return response(200,{ok:true});return env.ASSETS.fetch(request);}
  if(request.method!=='POST'||!['/api/solve','/api/chat'].includes(route))return response(404,{error:'Bulunamadı.'});
  if(!gate(request))return response(429,{error:'Çok fazla istek. Biraz sonra tekrar dene.'});
