@@ -1,31 +1,84 @@
 (()=>{
-const style=document.createElement('style');style.textContent="main{max-width:1560px!important;width:min(98%,1560px)!important}.layout{grid-template-columns:minmax(320px,32%) minmax(0,68%)!important;gap:20px!important}.question-card{display:none!important}.solution-board{padding:12px!important;background:#fff!important}.solution-board>.board-step,.solution-board>.answer{display:none!important}.visual-sheet{display:block;width:100%;height:auto;background:#fff;border:1px solid #d9e7fa;border-radius:15px}.sheet-actions{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}.sheet-actions button{background:#e8f2ff;color:#1b56a0}.visual-caption{font-size:13px;color:#59759b;margin:5px 0 12px}@media(max-width:850px){main{width:100%!important;padding:0 10px!important;margin:12px auto!important}.layout{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}.panel{padding:12px!important}.solution-board{padding:5px!important}.visual-sheet{border-radius:9px}.sheet-actions button{flex:1}}";style.textContent += '@media(max-width:850px){.visual-sheet{width:100%!important}.solution-board{overflow:hidden}.panel{width:100%}.actions .btn{min-height:44px}}';document.head.append(style);
-const oldRender=render;
-function flowText(ctx,txt,x,y,width,lineHeight,maxLines){let line='',n=0;for(const word of String(txt||'').split(/\s+/)){let next=line?line+' '+word:word;if(line&&ctx.measureText(next).width>width){ctx.fillText(line,x,y);y+=lineHeight;n++;line=word;if(n>=maxLines)return y}else line=next}if(line){ctx.fillText(line,x,y);y+=lineHeight}return y}
-function drawDiagram(ctx,d,x,y,w,h){if(!d||!d.points||!d.segments?.length)return false;const lookup=Object.fromEntries(d.points.map(p=>[p.id,p]));const pos=p=>({x:x+(p.x/100)*w,y:y+(p.y/100)*h});ctx.lineWidth=3.5;ctx.strokeStyle='#245caa';for(const s of d.segments){const a=lookup[s.from],b=lookup[s.to];if(!a||!b)continue;let pa=pos(a),pb=pos(b);ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke()}ctx.font='bold 23px Arial';ctx.fillStyle='#13457e';for(const p of d.points){let k=pos(p);ctx.beginPath();ctx.arc(k.x,k.y,4,0,Math.PI*2);ctx.fill();ctx.fillText(p.id,k.x+9,k.y-8)}ctx.fillStyle='#ad5f17';for(const l of d.labels||[]){let k=pos(l);ctx.fillText(l.text,k.x,k.y)}return true}
+const css=document.createElement('style');
+css.textContent='main{max-width:1520px!important;width:98%!important}.layout{display:grid!important;grid-template-columns:minmax(320px,32%) minmax(0,68%)!important;gap:20px!important;align-items:start}.panel{min-width:0}.question-card{display:none!important}.solution-board{background:#fff!important;padding:13px!important;overflow:hidden!important}.solution-board>.board-step,.solution-board>.answer{display:none!important}.visual-sheet{display:block;width:100%;height:auto;background:#fffef9;border-radius:16px;border:1px solid #dae6f4}.sheet-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:12px}.sheet-actions button{background:#e8f2ff!important;color:#19549b!important;min-height:44px;box-shadow:none!important}.sheet-check{font-size:13px;font-weight:700;padding:10px;border-radius:10px;background:#fff1d8;color:#875915}.sheet-check.checked{background:#dff9eb;color:#11633b}.sheet-check.mismatch{background:#ffe3e3;color:#9c2929}.board-zoom{position:fixed!important;inset:1vh 1vw!important;z-index:100!important;overflow:auto!important;background:white!important;max-height:98vh;box-shadow:0 0 0 100vmax #061526c9!important}.board-zoom .visual-sheet{max-width:1200px;margin:auto}.visual-caption{font-weight:700;color:#53769a;font-size:14px;margin:6px 0 12px}@media(max-width:850px){main{width:100%!important;padding:0 10px!important}.layout{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}.panel{padding:13px!important}.solution-board{padding:6px!important}.visual-sheet{border-radius:8px}.sheet-actions button{flex:1}.sheet-check{width:100%}}';
+document.head.append(css);
+const original=render;
+const friendly=s=>String(s??'').trim().replace(/\^2\b/g,'²').replace(/\^3\b/g,'³');
+function setFont(c,size,bold=false){c.font=(bold?'bold ':'')+size+'px system-ui'}
+function rows(c,str,width){const out=[];for(const para of String(str||'').split('\n')){let row='';for(let word of para.split(/\s+/)){if(!word)continue;while(c.measureText(word).width>width){if(row){out.push(row);row=''}let cut=1;while(cut<word.length&&c.measureText(word.slice(0,cut+1)).width<=width)cut++;out.push(word.slice(0,cut));word=word.slice(cut)}const cand=row?row+' '+word:word;if(row&&c.measureText(cand).width>width){out.push(row);row=word}else row=cand}if(row)out.push(row)}return out.length?out:['']}
+function lines(c,s,x,y,width,size,lead,color,bold=false){setFont(c,size,bold);c.fillStyle=color;const arr=rows(c,s,width);for(const row of arr){c.fillText(row,x,y);y+=lead}return y}
+function sizeFor(c,s,width,size,lead,bold=false){setFont(c,size,bold);return rows(c,s,width).length*lead}
+function rect(c,x,y,w,h,fill,stroke){c.fillStyle=fill;c.beginPath();c.roundRect(x,y,w,h,14);c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=2;c.stroke()}}
+function geometry(d,c,x,y,w,h){rect(c,x,y,w,h,'#f3f8ff','#dce9f7');lines(c,d.title||'Şekil',x+19,y+36,w-40,24,28,'#28599b',true);
+const p=new Map(d.points.map(a=>[a.id,a])),px=x+30,py=y+57,pw=w-60,ph=h-93;
+const at=v=>({x:px+pw*v.x/100,y:py+ph*v.y/100});
+c.strokeStyle='#2864c0';c.lineWidth=4;for(const seg of d.segments){const aa=p.get(seg.from),bb=p.get(seg.to);if(!aa||!bb)continue;const A=at(aa),B=at(bb);c.beginPath();c.moveTo(A.x,A.y);c.lineTo(B.x,B.y);c.stroke()}
+setFont(c,22,true);c.fillStyle='#16406c';for(const point of d.points){const v=at(point);c.fillText(point.id,v.x+8,v.y-7)}
+c.fillStyle='#b15e13';for(const label of d.labels||[]){const v=at(label);c.fillText(String(label.text||''),v.x+3,v.y-7)}}
+function getKind(){if(solution.kind==='geometry'||solution.diagram||solution.diagrams?.length)return 'geometry';return 'algebra'}
+function getDiagrams(){const ds=Array.isArray(solution.diagrams)?solution.diagrams:(solution.diagram?[solution.diagram]:[]);return ds.filter(d=>d&&d.points?.length>=2&&d.segments?.length).slice(0,3)}
+function loadPhoto(src){return new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=src})}
 function paint(canvas){
- const W=1120,items=solution.steps.slice(0,step+1);
- const imageArea=solution.diagram?550:335;
- const lineEst=items.reduce((n,s)=>n+110+Math.ceil(String(s.explanation||'').length/58)*42,0);
- const H=Math.max(650,Math.max(215,Math.ceil(String(solution.question).length/52)*43+110)+imageArea+lineEst+(step===solution.steps.length-1?130:0));
- canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');
- c.fillStyle='#fffefa';c.fillRect(0,0,W,H);c.fillStyle='#2563eb';c.fillRect(0,0,W,9);
- c.font='bold 24px Arial';c.fillStyle='#3471b9';c.fillText('MATEMATİK AI  /  ÇÖZÜM',36,48);
- c.font='bold 36px Arial';c.fillStyle='#172d50';
- const questionBottom=flowText(c,solution.question,38,98,1035,43,4);
- const diagramTop=Math.max(215,questionBottom+12);
- let detailsTop=diagramTop+imageArea+24;
- function work(){c.strokeStyle='#c9ddf5';c.beginPath();c.moveTo(32,detailsTop);c.lineTo(1088,detailsTop);c.stroke();let y=detailsTop+47;
- items.forEach((s,i)=>{c.fillStyle=i===step?'#fff0cb':'#ebf4ff';c.fillRect(32,y-33,1052,9);c.fillStyle=i===step?'#a6680f':'#176bc1';c.font='bold 30px Arial';y=flowText(c,(i+1)+'. '+(s.title||'Çözüm'),45,y,1020,36,2)+11;c.fillStyle='#203853';c.font='30px Georgia';y=flowText(c,s.explanation,45,y,1010,42,14)+28});
- if(step===solution.steps.length-1){c.fillStyle='#e0faea';c.fillRect(29,H-95,1060,68);c.fillStyle='#14683e';c.font='bold 38px Arial';flowText(c,'SONUÇ: '+solution.answer,47,H-49,1010,36,1)}}
- if(drawDiagram(c,solution.diagram,95,diagramTop+16,650,imageArea-65)){c.fillStyle='#f1f7ff';c.fillRect(770,diagramTop+15,312,imageArea-50);c.font='bold 22px Arial';c.fillStyle='#225bab';c.fillText('ŞEKİL ÜZERİNDE',787,diagramTop+52);c.fillText('İŞLEMLER',787,diagramTop+82);c.font='22px Georgia';c.fillStyle='#194166';let ay=diagramTop+124;for(const s of items.slice(-3)){ay=flowText(c,s.title,787,ay,275,29,2)+12;ay=flowText(c,s.explanation,787,ay,275,29,3)+18;if(ay>detailsTop-70)break}work();return}
- // Geometri çizimi doğrulanamadığında şekli kaybetme: seçilen özgün bölgeyi beyaz sayfanın içine büyük yerleştir.
- const img=new Image();img.onload=()=>{c.fillStyle='#f7faff';c.fillRect(30,diagramTop,1060,imageArea-12);
- const factor=Math.min(1010/img.width,(imageArea-35)/img.height);const iw=img.width*factor,ih=img.height*factor;
- c.drawImage(img,(W-iw)/2,diagramTop+8+(imageArea-35-ih)/2,iw,ih);
- c.strokeStyle='#b9d0e9';c.strokeRect(30,diagramTop,1060,imageArea-12);work()};
- img.onerror=()=>{c.fillStyle='#9b6320';c.font='24px Arial';c.fillText('Soru görseli yüklenemedi.',42,diagramTop+70);work()};
- img.src=solution.cropImage||image;
+const mobile=window.innerWidth<700,W=mobile?680:1120,P=30,inside=W-P*2;
+const c=canvas.getContext('2d'),steps=solution.steps.slice(0,step+1),kind=getKind(),ds=getDiagrams();
+const questionH=sizeFor(c,solution.question,inside,31,43,true)+150;
+let geometryH=0,cols=1,diagramH=mobile?320:350;
+const workings=(Array.isArray(solution.working)?solution.working:[]).slice(0,Math.max(1,step+1));
+if(kind==='geometry'){cols=mobile?1:Math.min(ds.length||1,2);geometryH=ds.length?Math.ceil(ds.length/cols)*(diagramH+13)+35:(mobile?280:350)}
+else{geometryH=110+workings.reduce((n,w)=>n+sizeFor(c,friendly(w),inside-48,35,46,true)+15,0);geometryH=Math.max(175,geometryH)}
+const hs=steps.map(s=>95+sizeFor(c,s.title||'Çözüm',inside-90,29,38,true)+(s.formula?sizeFor(c,friendly(s.formula),inside-90,34,46,true)+12:0)+(s.explanation?sizeFor(c,s.explanation,inside-90,26,38)+13:0));
+const stepH=hs.reduce((a,b)=>a+b,0)+Math.max(0,steps.length-1)*14;
+const final=step===solution.steps.length-1,answerH=final?135:0;
+const H=questionH+geometryH+stepH+answerH+70;
+canvas.width=W;canvas.height=H;
+const ctx=canvas.getContext('2d');ctx.fillStyle='#fffdfa';ctx.fillRect(0,0,W,H);ctx.fillStyle='#3074ef';ctx.fillRect(0,0,W,8);
+ctx.strokeStyle='#edf2fa';ctx.lineWidth=1;for(let yy=70;yy<H;yy+=65){ctx.beginPath();ctx.moveTo(18,yy);ctx.lineTo(W-18,yy);ctx.stroke()}
+lines(ctx,'MATEMATİK AI / GÖRSEL ÇÖZÜM',P,45,inside,23,28,'#3471b6',true);
+lines(ctx,kind==='geometry'?'GEOMETRİ':'CEBİR',P,79,inside,18,25,'#6b819e',true);
+let y=lines(ctx,solution.question,P,123,inside,31,43,'#19345a',true)+27;
+const mainY=y;
+if(kind==='algebra'){
+rect(ctx,25,y,W-50,geometryH,'#f1f7ff','#dce8f7');
+let lineY=y+42;
+lineY=lines(ctx,'DENKLEM VE İŞLEMLER',43,lineY,inside-36,22,31,'#2868b1',true)+25;
+if(workings.length)for(const w of workings){lineY=lines(ctx,friendly(w),48,lineY,inside-46,35,46,'#1d58a6',true)+15}
+else lines(ctx,'Çözüm adımları aşağıda gösteriliyor.',47,lineY,inside-45,26,36,'#42698e');
+}else if(ds.length){
+let cellW=(W-50-(cols-1)*12)/cols;
+for(let i=0;i<ds.length;i++){const x=25+(i%cols)*(cellW+12),yy=y+Math.floor(i/cols)*(diagramH+13);geometry(ds[i],ctx,x,yy,cellW,diagramH)}
+lines(ctx,'Şekildeki ölçüleri orijinal soruyla karşılaştırın.',37,y+geometryH-11,inside-14,19,24,'#8b6a39');
+}else{
+rect(ctx,25,y,W-50,geometryH,'#f2f8ff','#dce8f7');
+lines(ctx,'ORİJİNAL ŞEKİL · REFERANS',42,y+34,inside-40,20,28,'#54739b',true);
 }
-render=function(){oldRender();if(!solution)return;const board=document.querySelector('.solution-board');if(!board)return;const label=document.createElement('p');label.className='visual-caption';label.textContent=solution.diagram?'Beyaz tahta · yeniden çizilmiş şekil ve işlemler':'Beyaz tahta · seçilen soru ve işlemler';const canvas=document.createElement('canvas');canvas.className='visual-sheet';canvas.setAttribute('aria-label','Yeni oluşturulan matematik sorusu ve adım adım çözüm görseli');board.insertBefore(label,board.firstChild);board.insertBefore(canvas,label.nextSibling);paint(canvas);const actions=document.createElement('div');actions.className='sheet-actions';const save=document.createElement('button');save.className='btn';save.textContent='Çözüm görselini kaydet';save.onclick=()=>{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='matematik-cozum.png';a.click()};actions.append(save);board.append(actions)};
+y+=geometryH+27;
+for(let i=0;i<steps.length;i++){
+const s=steps[i];rect(ctx,25,y,W-50,hs[i],i===step?'#fff3d5':'#f4f8ff',i===step?'#f0d69e':'#e1eaf7');
+rect(ctx,39,y+19,42,43,i===step?'#e6a534':'#2873cd');
+lines(ctx,String(i+1),51,y+49,28,23,26,'#fff',true);
+let yy=lines(ctx,s.title||'Çözüm',95,y+47,W-126,29,38,'#163c6c',true)+10;
+if(s.formula)yy=lines(ctx,friendly(s.formula),95,yy,W-127,34,46,'#1d6bc6',true)+12;
+if(s.explanation)lines(ctx,s.explanation,95,yy,W-126,26,38,'#273f5d');
+y+=hs[i]+14;
+}
+if(final){
+const stat=solution.verification?.status||'review',bad=stat==='mismatch',ok=stat==='checked';
+const ink=bad?'#9a2929':ok?'#17603d':'#92611c';
+rect(ctx,25,H-153,W-50,103,bad?'#ffe5e5':ok?'#dff9e8':'#fff0d3');
+lines(ctx,bad?'DOĞRULAMA HATASI':ok?'ARİTMETİK DOĞRULANDI':'SONUÇ KONTROL EDİLMELİ',41,H-110,inside-24,20,28,ink,true);
+lines(ctx,bad?'Sonuç güvenli değil.':'SONUÇ: '+solution.answer,41,H-69,inside-24,34,40,ink,true);
+}
+const drawFallback=async()=>{if(kind==='geometry'&&!ds.length){const img=await loadPhoto(solution.cropImage||image);if(img){const sc=Math.min((W-90)/img.width,(geometryH-57)/img.height),dw=img.width*sc,dh=img.height*sc;ctx.save();ctx.filter='brightness(1.12) contrast(1.10)';ctx.drawImage(img,(W-dw)/2,mainY+41+(geometryH-55-dh)/2,dw,dh);ctx.restore()}}};
+return drawFallback();
+}
+render=function(){original();if(!solution)return;const board=document.querySelector('.solution-board');if(!board)return;
+const label=document.createElement('p');label.className='visual-caption';label.textContent=(getKind()==='geometry'?'Geometri çizimi':'Cebir işlemleri')+' · '+(step+1)+'/'+solution.steps.length+' adım';
+const canvas=document.createElement('canvas');canvas.className='visual-sheet';canvas.setAttribute('aria-label','Beyaz matematik çözüm tahtası, soru ve işlemler');board.insertBefore(label,board.firstChild);board.insertBefore(canvas,label.nextSibling);
+const actions=document.createElement('div');actions.className='sheet-actions';
+const save=document.createElement('button');save.className='btn';save.disabled=true;save.textContent='Çözüm PNG kaydet';save.onclick=()=>{const a=document.createElement('a');a.download='matematik-cozum.png';a.href=canvas.toDataURL('image/png');a.click()};
+const zoom=document.createElement('button');zoom.className='btn';zoom.textContent='Büyüt';zoom.onclick=()=>{const on=board.classList.toggle('board-zoom');zoom.textContent=on?'Kapat':'Büyüt'};
+const proof=document.createElement('div');proof.className='sheet-check '+(solution.verification?.status||'review');proof.textContent=solution.verification?.message||'Bağımsız matematik kontrolü bulunmuyor.';
+actions.append(save,zoom,proof);board.append(actions);
+paint(canvas).then(()=>{save.disabled=false}).catch(e=>{proof.textContent='Görsel oluşturulamadı: '+e.message});
+};
 })();
