@@ -64,5 +64,5 @@ export function assessSolution(draft,reader){
     if(!equivalentNumber(String(draft.answer||''),pretty(expected.result)))return {status:'mismatch',message:'Bağımsız hesaplama cevabı doğrulamadı.',checked:0};
     return {status:'checked',message:expected.detail+'. Görseldeki değerler için ikinci okuma da aynı cevabı verdi.',checked:1};
   }
-  return {status:'review',message:'İki AI okuması aynı cevabı verdi; bağımsız matematik kanıtı bulunamadı.',checked:0};
+  return {status:'review',message:'İki AI okuması aynı cevabı verdi; bağımsız matematik kanıtı bulunamadı, sonuç kontrol edilmeli.',checked:0};
 }
