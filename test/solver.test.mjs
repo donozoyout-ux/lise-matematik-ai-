@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import worker from '../src/worker.mjs';
 
 const image='data:image/png;base64,aGVsbG8=';
-async function callAI(payload, body){
+async function callAI(payload, body, reviewer){
+ let calls=0;const independent=reviewer||{question:body.question,kind:body.kind,answer:body.answer,uncertain:false,evidence:body.kind==='algebra'?{type:'substitution',expression:'(x^2+y^3)/(x-y)',variables:{x:'2',y:'-1'}}:{type:'none'}};
  const original=globalThis.fetch;
- globalThis.fetch=async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(body)}]}}]}),{status:200,headers:{'content-type':'application/json'}});
+ globalThis.fetch=async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(calls++===0?body:independent)}]}}]}),{status:200,headers:{'content-type':'application/json'}});
  try{const response=await worker.fetch(new Request('https://example.test/api/solve',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image,...payload})}),{GEMINI_API_KEY:'dummy'});
  return {http:response.status,...await response.json()};
  }finally{globalThis.fetch=original}
@@ -25,3 +26,6 @@ test('two independent geometry positions are returned',async()=>{
 test('unverified geometry returns a caution',async()=>{
  const out=await callAI({},{...base,kind:'geometry',checks:[]});assert.equal(out.verification.status,'review');assert.match(out.warning,/kontrol/i);
 });
+
+test('independent disagreement suppresses misleading solution',async()=>{const out=await callAI({},base,{question:base.question,kind:'algebra',answer:'2',uncertain:false,evidence:{type:'none'}});assert.equal(out.verification.status,'mismatch');assert.equal(out.answer,'Kontrol gerekli');assert.equal(out.steps[0].title,'Çözüm doğrulanamadı');assert.equal(out.working.length,0)});
+test('unreadable independent image suppresses confident answer',async()=>{const out=await callAI({},base,{question:'',kind:'algebra',answer:'',uncertain:true,evidence:{type:'none'}});assert.equal(out.verification.status,'mismatch');assert.equal(out.answer,'Kontrol gerekli')});
