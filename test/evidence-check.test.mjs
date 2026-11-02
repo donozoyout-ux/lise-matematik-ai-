@@ -21,3 +21,9 @@ test('independent disagreement blocks an answer',()=>{
  assert.equal(assessSolution({answer:'1'},{question:'expr',answer:'1',uncertain:true}).status,'mismatch');
  assert.equal(assessSolution({answer:'x'},{question:'expr',answer:'x',evidence:null}).status,'review');
 });
+
+test('disagreement in image numbers cannot be certified',()=>{
+ const a={kind:'algebra',question:'x=2, y=-1',answer:'1'};
+ const b={kind:'algebra',question:'x=3, y=-1',answer:'1',evidence:{type:'none'}};
+ assert.equal(assessSolution(a,b).status,'mismatch');
+});
