@@ -42,9 +42,19 @@ export function expectedFromEvidence(evidence){
 function equivalentNumber(a,b){
   try{return identical(evaluate(a),evaluate(b))}catch{return safeText(a).toLowerCase()===safeText(b).toLowerCase()}
 }
+function questionNumbers(value){
+  return [...String(value||'').matchAll(/\d+(?:[.,]\d+)?/g)].map(x=>x[0].replace(',','.')).sort();
+}
 export function assessSolution(draft,reader){
   if(!reader||reader.uncertain===true||!safeText(reader.answer)||!safeText(reader.question)){
     return {status:'mismatch',message:'Fotoğraftaki soru ikinci okumada net doğrulanamadı.',checked:0};
+  }
+  if(reader.kind&&draft.kind&&reader.kind!==draft.kind){
+    return {status:'mismatch',message:'İki okuma sorunun türünde anlaşamadı.',checked:0};
+  }
+  const a=questionNumbers(draft.question),b=questionNumbers(reader.question);
+  if(a.length&&b.length&&a.join('|')!==b.join('|')){
+    return {status:'mismatch',message:'Fotoğraftaki sayılar iki okumada farklı algılandı.',checked:0};
   }
   if(!equivalentNumber(String(draft.answer||''),reader.answer)){
     return {status:'mismatch',message:'İki bağımsız görsel okuması aynı sonuca ulaşmadı.',checked:0};
