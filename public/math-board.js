@@ -67,7 +67,7 @@ const stat=solution.verification?.status||'review',bad=stat==='mismatch',ok=stat
 const ink=bad?'#9a2929':ok?'#17603d':'#92611c';
 rect(ctx,25,H-153,W-50,103,bad?'#ffe5e5':ok?'#dff9e8':'#fff0d3');
 lines(ctx,bad?'DOĞRULAMA HATASI':ok?'ARİTMETİK DOĞRULANDI':'SONUÇ KONTROL EDİLMELİ',41,H-110,inside-24,20,28,ink,true);
-lines(ctx,bad?'Sonuç güvenli değil.':'SONUÇ: '+solution.answer,41,H-69,inside-24,34,40,ink,true);
+lines(ctx,bad?'Sonuç güvenli değil.':ok?'SONUÇ: '+solution.answer:'ÖNERİLEN SONUÇ: '+solution.answer,41,H-69,inside-24,34,40,ink,true);
 }
 const drawFallback=async()=>{if(kind==='geometry'&&!ds.length){const img=await loadPhoto(solution.cropImage||image);if(img){const sc=Math.min((W-90)/img.width,(geometryH-57)/img.height),dw=img.width*sc,dh=img.height*sc;ctx.save();ctx.filter='brightness(1.12) contrast(1.10)';ctx.drawImage(img,(W-dw)/2,mainY+41+(geometryH-55-dh)/2,dw,dh);ctx.restore()}}};
 return drawFallback();
