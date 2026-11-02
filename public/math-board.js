@@ -16,7 +16,8 @@ c.strokeStyle='#2864c0';c.lineWidth=4;for(const seg of d.segments){const aa=p.ge
 setFont(c,22,true);c.fillStyle='#16406c';for(const point of d.points){const v=at(point);c.fillText(point.id,v.x+8,v.y-7)}
 c.fillStyle='#b15e13';for(const label of d.labels||[]){const v=at(label);c.fillText(String(label.text||''),v.x+3,v.y-7)}}
 function getKind(){if(solution.kind==='geometry'||solution.diagram||solution.diagrams?.length)return 'geometry';return 'algebra'}
-function getDiagrams(){const ds=Array.isArray(solution.diagrams)?solution.diagrams:(solution.diagram?[solution.diagram]:[]);return ds.filter(d=>d&&d.points?.length>=2&&d.segments?.length).slice(0,3)}
+function needsTwoPositions(){const q=String(solution.question||'');return /(?:1\.?\s*konum|birinci\s+konum)/i.test(q)&&/(?:2\.?\s*konum|ikinci\s+konum)/i.test(q)}
+function getDiagrams(){const ds=Array.isArray(solution.diagrams)?solution.diagrams:(solution.diagram?[solution.diagram]:[]);const accepted=ds.filter(d=>d&&d.points?.length>=2&&d.segments?.length).slice(0,3);return needsTwoPositions()&&accepted.length<2?[]:accepted}
 function loadPhoto(src){return new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=src})}
 function paint(canvas){
 const mobile=window.innerWidth<700,W=mobile?680:1120,P=30,inside=W-P*2;
@@ -49,7 +50,7 @@ for(let i=0;i<ds.length;i++){const x=25+(i%cols)*(cellW+12),yy=y+Math.floor(i/co
 lines(ctx,'Şekildeki ölçüleri orijinal soruyla karşılaştırın.',37,y+geometryH-11,inside-14,19,24,'#8b6a39');
 }else{
 rect(ctx,25,y,W-50,geometryH,'#f2f8ff','#dce8f7');
-lines(ctx,'ORİJİNAL ŞEKİL · REFERANS',42,y+34,inside-40,20,28,'#54739b',true);
+lines(ctx,needsTwoPositions()?'İKİ KONUM TAM ÇİZİLEMEDİ · ORİJİNAL ŞEKİL':'ORİJİNAL ŞEKİL · REFERANS',42,y+34,inside-40,20,28,'#54739b',true);
 }
 y+=geometryH+27;
 for(let i=0;i<steps.length;i++){
@@ -72,7 +73,7 @@ const drawFallback=async()=>{if(kind==='geometry'&&!ds.length){const img=await l
 return drawFallback();
 }
 render=function(){original();if(!solution)return;const board=document.querySelector('.solution-board');if(!board)return;
-const label=document.createElement('p');label.className='visual-caption';label.textContent=(getKind()==='geometry'?'Geometri çizimi':'Cebir işlemleri')+' · '+(step+1)+'/'+solution.steps.length+' adım';
+const label=document.createElement('p');label.className='visual-caption';label.textContent=(needsTwoPositions()&&!getDiagrams().length?'İki geometri konumu birlikte çizilemedi; orijinal soru şekli gösteriliyor':getKind()==='geometry'?'Geometri çizimi':'Cebir işlemleri')+' · '+(step+1)+'/'+solution.steps.length+' adım';
 const canvas=document.createElement('canvas');canvas.className='visual-sheet';canvas.setAttribute('aria-label','Beyaz matematik çözüm tahtası, soru ve işlemler');board.insertBefore(label,board.firstChild);board.insertBefore(canvas,label.nextSibling);
 const actions=document.createElement('div');actions.className='sheet-actions';
 const save=document.createElement('button');save.className='btn';save.disabled=true;save.textContent='Çözüm PNG kaydet';save.onclick=()=>{const a=document.createElement('a');a.download='matematik-cozum.png';a.href=canvas.toDataURL('image/png');a.click()};
